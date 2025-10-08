@@ -37,29 +37,36 @@ export const Toast = ({ message, type = 'info', duration = 3000, onClose, action
 
   return (
     <div
-      className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 ${bgColor} text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 max-w-md w-auto animate-slide-down`}
+      className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 ${bgColor} text-white px-4 py-3 rounded-lg shadow-xl max-w-md w-auto animate-slide-down`}
       role="alert"
     >
-      <span className="text-sm font-medium">{message}</span>
-      {actionLabel && onAction && (
+      {/* Message and close button row */}
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-medium flex-1">{message}</span>
         <button
-          onClick={() => {
-            onAction();
-            onClose();
-          }}
-          className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-md text-sm font-semibold transition-colors"
-          aria-label={actionLabel}
+          onClick={onClose}
+          className="p-1 hover:bg-white/20 rounded transition-colors flex-shrink-0"
+          aria-label="Close notification"
         >
-          {actionLabel}
+          <X className="w-4 h-4" />
         </button>
+      </div>
+
+      {/* Action button (shown on second row if present) */}
+      {actionLabel && onAction && (
+        <div className="mt-3 flex justify-center">
+          <button
+            onClick={() => {
+              onAction();
+              onClose();
+            }}
+            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-md text-sm font-semibold transition-colors"
+            aria-label={actionLabel}
+          >
+            {actionLabel}
+          </button>
+        </div>
       )}
-      <button
-        onClick={onClose}
-        className="p-1 hover:bg-white/20 rounded transition-colors"
-        aria-label="Close notification"
-      >
-        <X className="w-4 h-4" />
-      </button>
     </div>
   );
 };
