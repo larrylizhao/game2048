@@ -17,7 +17,6 @@ export const Game = () => {
   const [boardConfig, setBoardConfig] = useState<BoardConfig>(() =>
     BOARD_CONFIGS.find(c => c.size === DEFAULT_BOARD_SIZE) || BOARD_CONFIGS[0]
   );
-  const [gameKey, setGameKey] = useState(0);
 
   const { board, score, bestScore, status, boardSize, winningTile, move, restart, continuePlaying } = useGameState({
     boardSize: boardConfig.size,
@@ -28,7 +27,6 @@ export const Game = () => {
 
   const handleBoardSizeChange = (newConfig: BoardConfig) => {
     setBoardConfig(newConfig);
-    setGameKey(prev => prev + 1); // Force re-render to reset game
   };
 
   // Reset game when board config changes
