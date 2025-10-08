@@ -1,15 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameState } from '../hooks/useGameState';
 import { useKeyboard } from '../hooks/useKeyboard';
-import { GameStatus } from '../core';
+import { useSwipe } from '../hooks/useSwipe';
+import { GameStatus, Direction } from '../core';
 import { Board } from './Board';
 import { ScoreBoard } from './ScoreBoard';
-import { AIHint } from './AIHint';
+import { AIHintButton } from './AIHintButton';
+import { Toast, ToastType } from './Toast';
 import { Button } from './Button';
 import { ThemeToggle } from '../theme';
 import { BoardSizeSelector } from './BoardSizeSelector';
 import { BOARD_CONFIGS, BoardConfig, DEFAULT_BOARD_SIZE } from '../config/boardConfig';
 import { RotateCcw } from './icons';
+
+interface ToastMessage {
+  message: string;
+  type: ToastType;
+}
 
 /**
  * Main game component
@@ -18,6 +25,7 @@ export const Game = () => {
   const [boardConfig, setBoardConfig] = useState<BoardConfig>(() =>
     BOARD_CONFIGS.find(c => c.size === DEFAULT_BOARD_SIZE) || BOARD_CONFIGS[0]
   );
+  const [toast, setToast] = useState<ToastMessage | null>(null);
   const isFirstRender = useRef(true);
 
   const { board, score, bestScore, status, boardSize, winningTile, move, restart, continuePlaying } = useGameState({
@@ -26,9 +34,29 @@ export const Game = () => {
   });
 
   useKeyboard(move);
+  useSwipe({ onSwipe: move });
 
   const handleBoardSizeChange = (newConfig: BoardConfig) => {
     setBoardConfig(newConfig);
+  };
+
+  const showToast = (message: string, type: ToastType = 'info') => {
+    setToast({ message, type });
+  };
+
+  const handleAIHint = (direction: Direction) => {
+    const arrows = {
+      [Direction.Left]: '←',
+      [Direction.Right]: '→',
+      [Direction.Up]: '↑',
+      [Direction.Down]: '↓',
+    };
+    showToast(`AI suggests: ${direction.toUpperCase()} ${arrows[direction]}`, 'info');
+    move(direction);
+  };
+
+  const handleAIError = (message: string) => {
+    showToast(message, 'error');
   };
 
   // Reset game when board config changes (but skip first render)
@@ -40,13 +68,38 @@ export const Game = () => {
     restart();
   }, [boardConfig, restart]);
 
+  // Show toast notifications for game status changes
+  useEffect(() => {
+    if (status === GameStatus.Won) {
+      showToast(`🎉 You reached ${winningTile}!`, 'success');
+    } else if (status === GameStatus.Lost) {
+      showToast('Game Over! No more moves available.', 'error');
+    }
+  }, [status, winningTile]);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors px-4 py-6 sm:px-6">
+      {/* Toast notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {/* Top left controls */}
       <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
         <BoardSizeSelector currentSize={boardConfig.size} onSizeChange={handleBoardSizeChange} />
       </div>
 
+      {/* Top right controls */}
       <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2">
+        <AIHintButton
+          board={board}
+          onHintReceived={handleAIHint}
+          onError={handleAIError}
+        />
         <button
           onClick={restart}
           className="p-2 rounded-lg transition-colors duration-200 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
@@ -58,36 +111,25 @@ export const Game = () => {
         <ThemeToggle />
       </div>
 
+      {/* Game title */}
       <h1 className="text-4xl sm:text-6xl font-bold mb-6 sm:mb-8 text-yellow-600 dark:text-yellow-500">2048</h1>
 
+      {/* Score board */}
       <div className="flex items-center justify-center mb-4">
         <ScoreBoard score={score} bestScore={bestScore} />
       </div>
 
+      {/* Game board */}
       <Board board={board} boardSize={boardSize} />
 
+      {/* Continue button (only shown when won) */}
       {status === GameStatus.Won && (
-        <div className="mt-4 p-3 sm:p-4 bg-green-500 dark:bg-green-600 text-white rounded-lg flex flex-col sm:flex-row items-center gap-2 sm:gap-4 max-w-md w-full sm:w-auto">
-          <span className="font-bold text-sm sm:text-base text-center sm:text-left">🎉 You Win! (Reached {winningTile})</span>
-          <Button onClick={continuePlaying} className="bg-white text-green-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-gray-700 w-full sm:w-auto">
-            Continue
+        <div className="mt-4">
+          <Button onClick={continuePlaying}>
+            Continue Playing
           </Button>
         </div>
       )}
-
-      {status === GameStatus.Lost && (
-        <div className="mt-4 p-3 sm:p-4 bg-red-500 dark:bg-red-600 text-white rounded-lg font-bold text-center max-w-md w-full sm:w-auto">
-          Game Over!
-        </div>
-      )}
-
-      <div className="w-full max-w-md sm:w-auto">
-        <AIHint board={board} onMove={move} />
-      </div>
-
-      <div className="mt-6 sm:mt-8 text-gray-600 dark:text-gray-400 text-xs sm:text-sm text-center px-4">
-        Use arrow keys to play
-      </div>
     </div>
   );
 };
