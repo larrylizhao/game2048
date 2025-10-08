@@ -19,6 +19,7 @@ export interface GameState {
   status: GameStatus;
   boardSize: number;
   winningTile: number;
+  hasWon: boolean;
 }
 
 export interface GameActions {
@@ -118,6 +119,7 @@ export function useGameState({ boardSize, winningTile }: UseGameStateOptions): G
     status,
     boardSize,
     winningTile,
+    hasWon,
     move,
     restart,
     continuePlaying,

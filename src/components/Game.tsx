@@ -28,7 +28,7 @@ export const Game = () => {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const isFirstRender = useRef(true);
 
-  const { board, score, bestScore, status, boardSize, winningTile, move, restart, continuePlaying } = useGameState({
+  const { board, score, bestScore, status, boardSize, winningTile, hasWon, move, restart, continuePlaying } = useGameState({
     boardSize: boardConfig.size,
     winningTile: boardConfig.winningTile,
   });
@@ -113,8 +113,8 @@ export const Game = () => {
 
       {/* Game title */}
       <h1 className={`text-4xl sm:text-6xl font-bold mb-6 sm:mb-8 transition-colors ${
-        status === GameStatus.Won
-          ? 'text-green-600 dark:text-green-500'
+        hasWon
+          ? 'text-green-500 dark:text-green-600'
           : 'text-yellow-600 dark:text-yellow-500'
       }`}>2048</h1>
 
