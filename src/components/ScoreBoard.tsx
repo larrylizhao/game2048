@@ -8,14 +8,15 @@ interface ScoreBoardProps {
  */
 export const ScoreBoard = ({ score, bestScore }: ScoreBoardProps) => {
   return (
-    <div className="flex gap-4">
-      <div className="bg-yellow-600 text-white px-6 py-3 rounded-lg shadow-md">
-        <div className="text-xs font-semibold uppercase tracking-wide">Score</div>
-        <div className="text-2xl font-bold">{score}</div>
+    <div className="flex gap-3 bg-yellow-600 dark:bg-yellow-700 text-white px-4 py-2 rounded-lg shadow-md">
+      <div className="flex items-center gap-2">
+        <div className="text-xs font-semibold uppercase tracking-wide opacity-90">Score</div>
+        <div className="text-xl font-bold">{score}</div>
       </div>
-      <div className="bg-yellow-700 text-white px-6 py-3 rounded-lg shadow-md">
-        <div className="text-xs font-semibold uppercase tracking-wide">Best</div>
-        <div className="text-2xl font-bold">{bestScore}</div>
+      <div className="border-l border-yellow-500 dark:border-yellow-600"></div>
+      <div className="flex items-center gap-2">
+        <div className="text-xs font-semibold uppercase tracking-wide opacity-90">Best</div>
+        <div className="text-xl font-bold">{bestScore}</div>
       </div>
     </div>
   );

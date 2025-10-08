@@ -49,19 +49,19 @@ export const AIHint = ({ board, onMove }: AIHintProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-2 mt-4">
-      <div className="flex gap-2">
-        <Button onClick={handleGetHint} disabled={loading}>
+    <div className="flex flex-col gap-2 mt-4 w-full">
+      <div className="flex flex-col sm:flex-row gap-2 w-full">
+        <Button onClick={handleGetHint} disabled={loading} className="w-full sm:w-auto">
           {loading ? 'Thinking...' : '🤖 Get AI Hint'}
         </Button>
         {hint && (
-          <Button onClick={handleApplyHint} variant="secondary">
+          <Button onClick={handleApplyHint} variant="secondary" className="w-full sm:w-auto">
             Apply: {hint.toUpperCase()} {getDirectionArrow(hint)}
           </Button>
         )}
       </div>
       {error && (
-        <div className="text-red-600 text-sm">{error}</div>
+        <div className="text-red-600 dark:text-red-400 text-xs sm:text-sm text-center">{error}</div>
       )}
     </div>
   );
