@@ -1,5 +1,4 @@
 import { Board, Direction } from '../types';
-import { BOARD_SIZE } from '../constants';
 import { rotate } from '../board/boardTransform';
 import { mergeLine } from './lineMerger';
 
@@ -30,11 +29,11 @@ function getRotationCount(direction: Direction): number {
 /**
  * Merges all rows to the left
  */
-function mergeLeft(board: Board): BoardMergeResult {
+function mergeLeft(board: Board, boardSize: number): BoardMergeResult {
   const newBoard: Board = [];
   let totalScore = 0;
 
-  for (let row = 0; row < BOARD_SIZE; row++) {
+  for (let row = 0; row < boardSize; row++) {
     const { line, score } = mergeLine(board[row]);
     newBoard.push(line);
     totalScore += score;
@@ -47,18 +46,18 @@ function mergeLeft(board: Board): BoardMergeResult {
  * Merges the board in the specified direction
  * Strategy: rotate board to make the merge a left merge, then rotate back
  */
-export function mergeBoard(board: Board, direction: Direction): BoardMergeResult {
+export function mergeBoard(board: Board, direction: Direction, boardSize: number): BoardMergeResult {
   const rotationCount = getRotationCount(direction);
 
   // Rotate to convert the move into a left merge
-  const rotatedBoard = rotate(board, rotationCount);
+  const rotatedBoard = rotate(board, rotationCount, boardSize);
 
   // Perform left merge
-  const { board: mergedBoard, score } = mergeLeft(rotatedBoard);
+  const { board: mergedBoard, score } = mergeLeft(rotatedBoard, boardSize);
 
   // Rotate back to original orientation
   const unrotationCount = (4 - rotationCount) % 4;
-  const finalBoard = rotate(mergedBoard, unrotationCount);
+  const finalBoard = rotate(mergedBoard, unrotationCount, boardSize);
 
   return { board: finalBoard, score };
 }

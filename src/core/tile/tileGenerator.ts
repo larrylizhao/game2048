@@ -13,9 +13,11 @@ function generateTileValue(): number {
 /**
  * Adds a random tile (2 or 4) to a random empty cell on the board
  * Mutates the board in place
+ * @param board - The game board
+ * @param boardSize - Size of the board
  */
-export function addRandomTile(board: Board): void {
-  const emptyCells = getEmptyCells(board);
+export function addRandomTile(board: Board, boardSize: number): void {
+  const emptyCells = getEmptyCells(board, boardSize);
 
   if (emptyCells.length === 0) {
     return;
@@ -23,6 +25,6 @@ export function addRandomTile(board: Board): void {
 
   const randomIndex = Math.floor(Math.random() * emptyCells.length);
   const [row, col] = emptyCells[randomIndex];
-  
+
   board[row][col] = generateTileValue();
 }

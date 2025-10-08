@@ -1,14 +1,13 @@
 import { Board } from '../types';
-import { BOARD_SIZE, WINNING_TILE } from '../constants';
 
 /**
  * Gets all empty cell positions on the board
  */
-export function getEmptyCells(board: Board): [number, number][] {
+export function getEmptyCells(board: Board, boardSize: number): [number, number][] {
   const emptyCells: [number, number][] = [];
 
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    for (let col = 0; col < BOARD_SIZE; col++) {
+  for (let row = 0; row < boardSize; row++) {
+    for (let col = 0; col < boardSize; col++) {
       if (board[row][col] === null) {
         emptyCells.push([row, col]);
       }
@@ -21,26 +20,26 @@ export function getEmptyCells(board: Board): [number, number][] {
 /**
  * Checks if the board has any empty cells
  */
-export function hasEmptyCells(board: Board): boolean {
-  return getEmptyCells(board).length > 0;
+export function hasEmptyCells(board: Board, boardSize: number): boolean {
+  return getEmptyCells(board, boardSize).length > 0;
 }
 
 /**
  * Checks if there are any adjacent tiles with the same value
  */
-function hasAdjacentMatchingTiles(board: Board): boolean {
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    for (let col = 0; col < BOARD_SIZE; col++) {
+function hasAdjacentMatchingTiles(board: Board, boardSize: number): boolean {
+  for (let row = 0; row < boardSize; row++) {
+    for (let col = 0; col < boardSize; col++) {
       const currentValue = board[row][col];
       if (currentValue === null) continue;
 
       // Check right neighbor
-      if (col < BOARD_SIZE - 1 && board[row][col + 1] === currentValue) {
+      if (col < boardSize - 1 && board[row][col + 1] === currentValue) {
         return true;
       }
 
       // Check bottom neighbor
-      if (row < BOARD_SIZE - 1 && board[row + 1][col] === currentValue) {
+      if (row < boardSize - 1 && board[row + 1][col] === currentValue) {
         return true;
       }
     }
@@ -52,17 +51,17 @@ function hasAdjacentMatchingTiles(board: Board): boolean {
 /**
  * Checks if the game is over (no valid moves remaining)
  */
-export function isGameOver(board: Board): boolean {
-  return !hasEmptyCells(board) && !hasAdjacentMatchingTiles(board);
+export function isGameOver(board: Board, boardSize: number): boolean {
+  return !hasEmptyCells(board, boardSize) && !hasAdjacentMatchingTiles(board, boardSize);
 }
 
 /**
- * Checks if the winning tile (2048) exists on the board
+ * Checks if the winning tile exists on the board
  */
-export function hasWinningTile(board: Board): boolean {
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    for (let col = 0; col < BOARD_SIZE; col++) {
-      if (board[row][col] === WINNING_TILE) {
+export function hasWinningTile(board: Board, boardSize: number, winningTile: number): boolean {
+  for (let row = 0; row < boardSize; row++) {
+    for (let col = 0; col < boardSize; col++) {
+      if (board[row][col] === winningTile) {
         return true;
       }
     }
@@ -73,9 +72,9 @@ export function hasWinningTile(board: Board): boolean {
 /**
  * Checks if two boards are equal
  */
-export function areBoardsEqual(board1: Board, board2: Board): boolean {
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    for (let col = 0; col < BOARD_SIZE; col++) {
+export function areBoardsEqual(board1: Board, board2: Board, boardSize: number): boolean {
+  for (let row = 0; row < boardSize; row++) {
+    for (let col = 0; col < boardSize; col++) {
       if (board1[row][col] !== board2[row][col]) {
         return false;
       }

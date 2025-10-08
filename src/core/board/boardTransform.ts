@@ -1,18 +1,17 @@
 import { Board } from '../types';
-import { BOARD_SIZE } from '../constants';
 
 /**
  * Rotates the board 90 degrees clockwise
  * Used to reuse left merge logic for other directions
  */
-export function rotateClockwise(board: Board): Board {
-  const rotated: Board = Array(BOARD_SIZE)
+export function rotateClockwise(board: Board, boardSize: number): Board {
+  const rotated: Board = Array(boardSize)
     .fill(null)
-    .map(() => Array(BOARD_SIZE).fill(null));
+    .map(() => Array(boardSize).fill(null));
 
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    for (let col = 0; col < BOARD_SIZE; col++) {
-      rotated[col][BOARD_SIZE - 1 - row] = board[row][col];
+  for (let row = 0; row < boardSize; row++) {
+    for (let col = 0; col < boardSize; col++) {
+      rotated[col][boardSize - 1 - row] = board[row][col];
     }
   }
 
@@ -22,10 +21,10 @@ export function rotateClockwise(board: Board): Board {
 /**
  * Rotates the board N times clockwise
  */
-export function rotate(board: Board, times: number): Board {
+export function rotate(board: Board, times: number, boardSize: number): Board {
   let result = board;
   for (let i = 0; i < times; i++) {
-    result = rotateClockwise(result);
+    result = rotateClockwise(result, boardSize);
   }
   return result;
 }
