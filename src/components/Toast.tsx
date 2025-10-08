@@ -8,19 +8,26 @@ interface ToastProps {
   type?: ToastType;
   duration?: number;
   onClose: () => void;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 /**
- * Toast notification component with auto-dismiss
+ * Toast notification component with auto-dismiss and optional action button
  */
-export const Toast = ({ message, type = 'info', duration = 3000, onClose }: ToastProps) => {
+export const Toast = ({ message, type = 'info', duration = 3000, onClose, actionLabel, onAction }: ToastProps) => {
   useEffect(() => {
+    // Don't auto-dismiss if there's an action button
+    if (actionLabel && onAction) {
+      return;
+    }
+
     const timer = setTimeout(() => {
       onClose();
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [duration, onClose]);
+  }, [duration, onClose, actionLabel, onAction]);
 
   const bgColor = {
     success: 'bg-green-500 dark:bg-green-600',
@@ -34,6 +41,18 @@ export const Toast = ({ message, type = 'info', duration = 3000, onClose }: Toas
       role="alert"
     >
       <span className="text-sm font-medium">{message}</span>
+      {actionLabel && onAction && (
+        <button
+          onClick={() => {
+            onAction();
+            onClose();
+          }}
+          className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-md text-sm font-semibold transition-colors"
+          aria-label={actionLabel}
+        >
+          {actionLabel}
+        </button>
+      )}
       <button
         onClick={onClose}
         className="p-1 hover:bg-white/20 rounded transition-colors"

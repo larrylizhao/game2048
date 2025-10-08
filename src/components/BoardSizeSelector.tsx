@@ -19,7 +19,7 @@ export const BoardSizeSelector = ({ currentSize, onSizeChange }: BoardSizeSelect
   };
 
   return (
-    <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all hover:shadow-xl">
+    <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
       <Grid3x3Icon className="w-5 h-5 text-yellow-600 dark:text-yellow-500" />
       <select
         id="board-size"

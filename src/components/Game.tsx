@@ -7,7 +7,6 @@ import { Board } from './Board';
 import { ScoreBoard } from './ScoreBoard';
 import { AIHintButton } from './AIHintButton';
 import { Toast, ToastType } from './Toast';
-import { Button } from './Button';
 import { ThemeToggle } from '../theme';
 import { BoardSizeSelector } from './BoardSizeSelector';
 import { BOARD_CONFIGS, BoardConfig, DEFAULT_BOARD_SIZE } from '../config/boardConfig';
@@ -16,6 +15,8 @@ import { RotateCcw } from './icons';
 interface ToastMessage {
   message: string;
   type: ToastType;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 /**
@@ -40,8 +41,8 @@ export const Game = () => {
     setBoardConfig(newConfig);
   };
 
-  const showToast = (message: string, type: ToastType = 'info') => {
-    setToast({ message, type });
+  const showToast = (message: string, type: ToastType = 'info', actionLabel?: string, onAction?: () => void) => {
+    setToast({ message, type, actionLabel, onAction });
   };
 
   const handleAIHint = (direction: Direction) => {
@@ -71,11 +72,11 @@ export const Game = () => {
   // Show toast notifications for game status changes
   useEffect(() => {
     if (status === GameStatus.Won) {
-      showToast(`🎉 You reached ${winningTile}!`, 'success');
+      showToast(`🎉 You reached ${winningTile}!`, 'success', 'Continue', continuePlaying);
     } else if (status === GameStatus.Lost) {
       showToast('Game Over! No more moves available.', 'error');
     }
-  }, [status, winningTile]);
+  }, [status, winningTile, continuePlaying]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors px-4 py-6 sm:px-6 overflow-hidden">
@@ -85,6 +86,8 @@ export const Game = () => {
           message={toast.message}
           type={toast.type}
           onClose={() => setToast(null)}
+          actionLabel={toast.actionLabel}
+          onAction={toast.onAction}
         />
       )}
 
@@ -125,15 +128,6 @@ export const Game = () => {
 
       {/* Game board */}
       <Board board={board} boardSize={boardSize} />
-
-      {/* Continue button (only shown when won) */}
-      {status === GameStatus.Won && (
-        <div className="mt-4">
-          <Button onClick={continuePlaying}>
-            Continue Playing
-          </Button>
-        </div>
-      )}
     </div>
   );
 };
