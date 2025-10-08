@@ -9,6 +9,7 @@ import { Button } from './Button';
 import { ThemeToggle } from '../theme';
 import { BoardSizeSelector } from './BoardSizeSelector';
 import { BOARD_CONFIGS, BoardConfig, DEFAULT_BOARD_SIZE } from '../config/boardConfig';
+import { RotateCcw } from './icons';
 
 /**
  * Main game component
@@ -45,15 +46,22 @@ export const Game = () => {
         <BoardSizeSelector currentSize={boardConfig.size} onSizeChange={handleBoardSizeChange} />
       </div>
 
-      <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2">
+        <button
+          onClick={restart}
+          className="p-2 rounded-lg transition-colors duration-200 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+          aria-label="New game"
+          title="New game"
+        >
+          <RotateCcw className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+        </button>
         <ThemeToggle />
       </div>
 
       <h1 className="text-4xl sm:text-6xl font-bold mb-6 sm:mb-8 text-yellow-600 dark:text-yellow-500">2048</h1>
 
-      <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-4 w-full max-w-md sm:w-auto">
+      <div className="flex items-center justify-center mb-4">
         <ScoreBoard score={score} bestScore={bestScore} />
-        <Button onClick={restart}>New Game</Button>
       </div>
 
       <Board board={board} boardSize={boardSize} />
