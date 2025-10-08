@@ -40,6 +40,7 @@ export function useGameState({ boardSize, winningTile }: UseGameStateOptions): G
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(() => loadBestScore(boardSize));
   const [status, setStatus] = useState<GameStatus>(GameStatus.Playing);
+  const [hasWon, setHasWon] = useState(false);
 
   // Load best score when board size changes
   useEffect(() => {
@@ -80,8 +81,9 @@ export function useGameState({ boardSize, winningTile }: UseGameStateOptions): G
       saveBestScore(boardSize, newScore);
     }
 
-    // Check win condition
-    if (hasWinningTile(newBoard, boardSize, winningTile)) {
+    // Check win condition (only if user hasn't won before)
+    if (!hasWon && hasWinningTile(newBoard, boardSize, winningTile)) {
+      setHasWon(true);
       setStatus(GameStatus.Won);
       return;
     }
@@ -90,7 +92,7 @@ export function useGameState({ boardSize, winningTile }: UseGameStateOptions): G
     if (isGameOver(newBoard, boardSize)) {
       setStatus(GameStatus.Lost);
     }
-  }, [board, score, status, bestScore, boardSize, winningTile]);
+  }, [board, score, status, bestScore, boardSize, winningTile, hasWon]);
 
   /**
    * Restarts the game with a new board
@@ -99,6 +101,7 @@ export function useGameState({ boardSize, winningTile }: UseGameStateOptions): G
     setBoard(initBoard(boardSize));
     setScore(0);
     setStatus(GameStatus.Playing);
+    setHasWon(false);
   }, [boardSize]);
 
   /**
