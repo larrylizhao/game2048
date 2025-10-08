@@ -112,7 +112,11 @@ export const Game = () => {
       </div>
 
       {/* Game title */}
-      <h1 className="text-4xl sm:text-6xl font-bold mb-6 sm:mb-8 text-yellow-600 dark:text-yellow-500">2048</h1>
+      <h1 className={`text-4xl sm:text-6xl font-bold mb-6 sm:mb-8 transition-colors ${
+        status === GameStatus.Won
+          ? 'text-green-600 dark:text-green-500'
+          : 'text-yellow-600 dark:text-yellow-500'
+      }`}>2048</h1>
 
       {/* Score board */}
       <div className="flex items-center justify-center mb-4">
