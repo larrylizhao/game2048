@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGameState } from '../hooks/useGameState';
 import { useKeyboard } from '../hooks/useKeyboard';
 import { GameStatus } from '../core';
@@ -17,6 +17,7 @@ export const Game = () => {
   const [boardConfig, setBoardConfig] = useState<BoardConfig>(() =>
     BOARD_CONFIGS.find(c => c.size === DEFAULT_BOARD_SIZE) || BOARD_CONFIGS[0]
   );
+  const isFirstRender = useRef(true);
 
   const { board, score, bestScore, status, boardSize, winningTile, move, restart, continuePlaying } = useGameState({
     boardSize: boardConfig.size,
@@ -29,8 +30,12 @@ export const Game = () => {
     setBoardConfig(newConfig);
   };
 
-  // Reset game when board config changes
+  // Reset game when board config changes (but skip first render)
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     restart();
   }, [boardConfig, restart]);
 
