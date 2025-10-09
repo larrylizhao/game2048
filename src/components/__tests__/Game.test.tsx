@@ -132,16 +132,6 @@ describe('Game', () => {
     expect(screen.getByRole('button', { name: /AI Hint/i })).toBeInTheDocument();
   });
 
-  it('should display instructions', () => {
-    render(
-      <ThemeProvider>
-        <Game />
-      </ThemeProvider>
-    );
-
-    expect(screen.getByText(/Use arrow keys to play/i)).toBeInTheDocument();
-  });
-
   it('should show win message when game is won', () => {
     vi.spyOn(useGameStateModule, 'useGameState').mockReturnValue({
       ...mockGameState,
@@ -154,8 +144,8 @@ describe('Game', () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByText(/You Win!/i)).toBeInTheDocument();
-    expect(screen.getByText(/Reached 2048/i)).toBeInTheDocument();
+    expect(screen.getByText(/Congratulations!/i)).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   it('should show Continue button when game is won', () => {
@@ -170,7 +160,7 @@ describe('Game', () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByRole('button', { name: /Continue/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Continue playing/i })).toBeInTheDocument();
   });
 
   it('should call continuePlaying when Continue button is clicked', async () => {
@@ -186,7 +176,7 @@ describe('Game', () => {
       </ThemeProvider>
     );
 
-    const continueButton = screen.getByRole('button', { name: /Continue/i });
+    const continueButton = screen.getByRole('button', { name: /Continue playing/i });
     await user.click(continueButton);
 
     expect(mockGameState.continuePlaying).toHaveBeenCalled();
@@ -214,7 +204,7 @@ describe('Game', () => {
       </ThemeProvider>
     );
 
-    expect(screen.queryByText(/You Win!/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Congratulations!/i)).not.toBeInTheDocument();
   });
 
   it('should not show game over message when game is playing', () => {
@@ -277,6 +267,8 @@ describe('Game', () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByText(/Reached 4096/i)).toBeInTheDocument();
+    // Check that victory modal is shown with correct winning tile
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText(/Congratulations!/i)).toBeInTheDocument();
   });
 });

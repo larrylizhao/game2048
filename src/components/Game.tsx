@@ -7,6 +7,7 @@ import { Board } from './Board';
 import { ScoreBoard } from './ScoreBoard';
 import { AIHintButton } from './AIHintButton';
 import { Toast, ToastType } from './Toast';
+import { VictoryModal } from './VictoryModal';
 import { ThemeToggle } from '../theme';
 import { BoardSizeSelector } from './BoardSizeSelector';
 import { BOARD_CONFIGS, BoardConfig, DEFAULT_BOARD_SIZE } from '../config/boardConfig';
@@ -27,6 +28,7 @@ export const Game = () => {
     BOARD_CONFIGS.find(c => c.size === DEFAULT_BOARD_SIZE) || BOARD_CONFIGS[0]
   );
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [showVictoryModal, setShowVictoryModal] = useState(false);
   const isFirstRender = useRef(true);
 
   const { board, score, bestScore, status, boardSize, winningTile, hasWon, move, restart, continuePlaying } = useGameState({
@@ -69,14 +71,14 @@ export const Game = () => {
     restart();
   }, [boardConfig, restart]);
 
-  // Show toast notifications for game status changes
+  // Show modal/toast notifications for game status changes
   useEffect(() => {
     if (status === GameStatus.Won) {
-      showToast(`🎉 You reached ${winningTile}!`, 'success', 'Continue', continuePlaying);
+      setShowVictoryModal(true);
     } else if (status === GameStatus.Lost) {
       showToast('Game Over! No more moves available.', 'error');
     }
-  }, [status, winningTile, continuePlaying]);
+  }, [status]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors px-4 py-6 sm:px-6 overflow-hidden">
@@ -88,6 +90,21 @@ export const Game = () => {
           onClose={() => setToast(null)}
           actionLabel={toast.actionLabel}
           onAction={toast.onAction}
+        />
+      )}
+
+      {/* Victory modal */}
+      {showVictoryModal && (
+        <VictoryModal
+          winningTile={winningTile}
+          onContinue={() => {
+            setShowVictoryModal(false);
+            continuePlaying();
+          }}
+          onRestart={() => {
+            setShowVictoryModal(false);
+            restart();
+          }}
         />
       )}
 
