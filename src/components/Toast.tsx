@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X } from './icons';
 
 export type ToastType = 'success' | 'error' | 'info';
 
