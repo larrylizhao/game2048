@@ -1,19 +1,22 @@
 # 2048 Game
 
-A modern implementation of the classic 2048 puzzle game built with React, TypeScript, and Tailwind CSS. Features AI-powered move suggestions using Claude API and a beautiful dark mode.
+A modern implementation of the classic 2048 puzzle game built with React, TypeScript, and Tailwind CSS. Features AI-powered move suggestions using Claude API, multiple board sizes, and a beautiful dark mode.
 
 ## 🎮 Live Demo
 
-[Play the game here](https://your-deployment-url.vercel.app)
+[Play the game here](https://game2048-rouge.vercel.app/)
 
 ## ✨ Features
 
 - 🎯 Classic 2048 gameplay with smooth animations
+- 📐 Multiple board sizes: 4×4, 5×5, and 6×6
+- 🏆 Victory modal with continue playing option
 - 🤖 AI-powered move suggestions using Claude API
 - 🌓 Dark mode with system preference detection
-- 💾 LocalStorage persistence for theme preference
+- 💾 LocalStorage persistence for theme preference and best score
 - ⌨️ Keyboard controls (arrow keys)
-- 📱 Responsive design
+- 👆 Touch/swipe controls for mobile devices
+- 📱 Responsive design (desktop and mobile optimized)
 - ♿ Accessible UI with ARIA labels
 
 ## 🏗️ Architecture
@@ -26,28 +29,28 @@ graph TD
     B --> C[Core Logic Layer]
     A --> D[Theme System]
     A --> E[AI Service Layer]
-    
+
     subgraph "UI Layer"
         A1[Components]
         A2[Icons]
     end
-    
+
     subgraph "State Management"
         B1[Hooks]
         B2[React Context]
     end
-    
+
     subgraph "Core Logic"
         C1[Board Operations]
         C2[Tile Generation]
         C3[Merge Logic]
         C4[Game Rules]
     end
-    
+
     subgraph "Services"
         E1[Claude API]
     end
-    
+
     subgraph "Theme"
         D1[ThemeProvider]
         D2[ThemeContext]
@@ -75,10 +78,17 @@ src/
 │
 ├── hooks/                     # React hooks for state management
 │   ├── useGameState.ts       # Main game state and actions
-│   └── useKeyboard.ts        # Keyboard event handling
+│   ├── useKeyboard.ts        # Keyboard event handling
+│   └── useSwipe.ts           # Touch/swipe gesture handling
 │
 ├── services/                  # External services
 │   └── aiService.ts          # Claude AI integration
+│
+├── config/                    # Configuration
+│   └── boardConfig.ts        # Board size configurations
+│
+├── storage/                   # Local storage utilities
+│   └── bestScoreStorage.ts   # Best score persistence
 │
 ├── theme/                     # Theme system (dark/light mode)
 │   ├── types.ts              # Theme types and constants
@@ -90,11 +100,13 @@ src/
 │
 ├── components/                # React UI components
 │   ├── Game.tsx              # Main game container
-│   ├── Board.tsx             # 4x4 game board grid
+│   ├── Board.tsx             # Responsive game board (desktop + mobile)
 │   ├── Tile.tsx              # Individual tile component
 │   ├── ScoreBoard.tsx        # Score display
-│   ├── Button.tsx            # Reusable button component
-│   ├── AIHint.tsx            # AI suggestion UI
+│   ├── BoardSizeSelector.tsx # Board size selection dropdown
+│   ├── VictoryModal.tsx      # Victory dialog with overlay
+│   ├── Toast.tsx             # Notification toast
+│   ├── AIHintButton.tsx      # Compact AI hint button
 │   └── icons.ts              # Centralized icon exports
 │
 ├── App.tsx                    # Root application component
@@ -134,7 +146,7 @@ src/
 - Game state (board, score, status)
 - User action handling (move, restart, continue)
 - State persistence (best score)
-- Event handling (keyboard inputs)
+- Event handling (keyboard inputs, touch gestures)
 
 **Communication**:
 - **From UI**: Receives user actions via hook methods
@@ -173,16 +185,18 @@ src/
 
 **Responsibilities**:
 - Rendering game state
-- User input capture
+- User input capture (keyboard, touch)
 - Visual feedback and animations
 - Accessibility features
 
 **Key Components**:
 - `Game`: Main container, layout orchestration
-- `Board`: 4x4 grid layout
-- `Tile`: Individual tile with color mapping
-- `ScoreBoard`: Score display
-- `AIHint`: AI suggestion interface
+- `Board`: Responsive grid layout (desktop and mobile versions)
+- `Tile`: Individual tile with dynamic sizing and color mapping
+- `ScoreBoard`: Unified score display (current + best)
+- `VictoryModal`: Modal dialog for game completion
+- `BoardSizeSelector`: Dropdown for board size selection
+- `AIHintButton`: Compact AI suggestion button
 
 ## 🔄 Data Flow
 
@@ -194,7 +208,7 @@ sequenceDiagram
     participant Core
     participant Storage
 
-    User->>UI: Press Arrow Key
+    User->>UI: Press Arrow Key / Swipe
     UI->>State: move(direction)
     State->>Core: mergeBoard(board, direction)
     Core-->>Core: Calculate new board state
@@ -211,7 +225,7 @@ sequenceDiagram
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 - Anthropic API key (for AI features)
 
@@ -247,19 +261,41 @@ npm run build
 npm run preview
 ```
 
+### Run Tests
+
+```bash
+npm test              # Run tests in watch mode
+npm run test:coverage # Run with coverage report
+```
+
 ## 🎮 How to Play
 
-1. Use **arrow keys** to move tiles
+### Basic Rules
+
+1. Use **arrow keys** (desktop) or **swipe** (mobile) to move tiles
 2. When two tiles with the same number touch, they **merge into one**
-3. Create a tile with the number **2048** to win
+3. Reach the winning tile to complete the game
 4. The game ends when no moves are possible
+
+### Board Sizes
+
+Choose your difficulty level:
+- **4×4 Classic**: Reach **16** (fast testing mode)
+- **5×5 Medium**: Reach **4096** (moderate challenge)
+- **6×6 Hard**: Reach **8192** (expert level)
+
+### Victory Options
+
+When you win, a modal appears with two choices:
+- **Continue Playing**: Keep going for a higher score
+- **New Game**: Start fresh with a new board
 
 ### AI Assistant
 
-Click the **🤖 Get AI Hint** button to get move suggestions from Claude AI. The AI analyzes the current board and suggests the optimal move to:
+Click the **✨ AI Hint** button to get move suggestions from Claude AI. The AI analyzes the current board and suggests the optimal move to:
 - Avoid game over
 - Maximize score
-- Increase chances of reaching 2048
+- Increase chances of winning
 
 ## 🛠️ Tech Stack
 
@@ -268,6 +304,7 @@ Click the **🤖 Get AI Hint** button to get move suggestions from Claude AI. Th
 - **Build Tool**: Vite
 - **Icons**: Lucide React
 - **AI**: Anthropic Claude API
+- **Testing**: Vitest + React Testing Library
 - **Deployment**: Vercel
 
 ## 📦 Key Dependencies
@@ -280,7 +317,8 @@ Click the **🤖 Get AI Hint** button to get move suggestions from Claude AI. Th
   "@tailwindcss/postcss": "^4.1.14",
   "@anthropic-ai/sdk": "^0.65.0",
   "lucide-react": "^0.544.0",
-  "vite": "^5.4.10"
+  "vite": "^5.4.10",
+  "vitest": "^3.2.4"
 }
 ```
 
@@ -301,8 +339,15 @@ Click the **🤖 Get AI Hint** button to get move suggestions from Claude AI. Th
 ### Accessibility
 - ARIA labels for interactive elements
 - Keyboard navigation support
+- Touch/swipe gesture support
 - High contrast color schemes
 - Screen reader friendly
+
+### Responsive Design
+- Desktop-optimized board (larger tiles)
+- Mobile-optimized board (smaller tiles)
+- Adaptive layout based on screen size
+- Touch-friendly controls
 
 ## 🌙 Dark Mode
 
@@ -311,6 +356,23 @@ The app supports dark mode with:
 - Manual toggle via button
 - LocalStorage persistence
 - Smooth transitions
+- Optimized colors for both themes
+
+## 🧪 Testing
+
+The project includes comprehensive test coverage:
+- **231 tests** across 20 test files
+- Unit tests for core logic
+- Component tests with React Testing Library
+- Integration tests for game flows
+- 100% test pass rate
+
+Run tests with:
+```bash
+npm test              # Watch mode
+npm run test:ui       # UI mode
+npm run test:coverage # Coverage report
+```
 
 ## 📝 License
 
