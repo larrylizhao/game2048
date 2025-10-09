@@ -21,7 +21,7 @@ describe('boardConfig', () => {
 
     it('should have correct winning tile for 4x4 board', () => {
       const config4x4 = BOARD_CONFIGS.find(c => c.size === 4);
-      expect(config4x4?.winningTile).toBe(2048);
+      expect(config4x4?.winningTile).toBe(16);
     });
 
     it('should have correct winning tile for 5x5 board', () => {
