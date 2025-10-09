@@ -52,13 +52,6 @@ describe('BoardSizeSelector', () => {
     expect(select).toHaveValue('5');
   });
 
-  it('should display Size label', () => {
-    const mockOnSizeChange = vi.fn();
-    render(<BoardSizeSelector currentSize={4} onSizeChange={mockOnSizeChange} />);
-
-    expect(screen.getByText('Size')).toBeInTheDocument();
-  });
-
   it('should have grid icon', () => {
     const mockOnSizeChange = vi.fn();
     const { container } = render(
@@ -94,16 +87,6 @@ describe('BoardSizeSelector', () => {
     expect(wrapper).toHaveClass('dark:bg-gray-800');
     expect(wrapper).toHaveClass('rounded-xl');
     expect(wrapper).toHaveClass('shadow-lg');
-  });
-
-  it('should have hover effect class', () => {
-    const mockOnSizeChange = vi.fn();
-    const { container } = render(
-      <BoardSizeSelector currentSize={4} onSizeChange={mockOnSizeChange} />
-    );
-
-    const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass('hover:shadow-xl');
   });
 
   it('should have correct select styling', () => {

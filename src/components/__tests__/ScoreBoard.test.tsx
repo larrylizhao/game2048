@@ -49,18 +49,20 @@ describe('ScoreBoard', () => {
     expect(screen.getByText('500')).toBeInTheDocument();
   });
 
-  it('should render two separate score containers', () => {
+  it('should render unified score container', () => {
     const { container } = render(<ScoreBoard score={100} bestScore={500} />);
-    const scoreContainers = container.querySelectorAll('.bg-yellow-600, .bg-yellow-700');
-    expect(scoreContainers).toHaveLength(2);
+    // Should have a single container with both scores
+    const scoreContainer = container.querySelector('.bg-yellow-600, .bg-yellow-700');
+    expect(scoreContainer).toBeTruthy();
   });
 
   it('should have correct styling classes', () => {
     const { container } = render(<ScoreBoard score={100} bestScore={500} />);
-    const scoreContainer = container.querySelector('.bg-yellow-600');
-    const bestContainer = container.querySelector('.bg-yellow-700');
-
+    // Should have a single unified container with yellow background
+    const scoreContainer = container.querySelector('.bg-yellow-600, .bg-yellow-700');
     expect(scoreContainer).toBeTruthy();
-    expect(bestContainer).toBeTruthy();
+    // Should contain both score and best sections
+    expect(scoreContainer?.textContent).toContain('Score');
+    expect(scoreContainer?.textContent).toContain('Best');
   });
 });

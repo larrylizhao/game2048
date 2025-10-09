@@ -61,7 +61,8 @@ describe('Board', () => {
     // The board container also has rounded-lg, so we filter by aspect-square which only tiles have
     const tiles = container.querySelectorAll('.aspect-square');
 
-    expect(tiles).toHaveLength(16); // 4x4 = 16 tiles
+    // Board renders both desktop and mobile versions, so 16 * 2 = 32 tiles
+    expect(tiles).toHaveLength(32);
   });
 
   it('should render correct number of tiles for 5x5 board', () => {
@@ -70,16 +71,18 @@ describe('Board', () => {
     const { container } = render(<Board board={board} boardSize={5} />);
     const tiles = container.querySelectorAll('.aspect-square');
 
-    expect(tiles).toHaveLength(25); // 5x5 = 25 tiles
+    // Board renders both desktop and mobile versions, so 25 * 2 = 50 tiles
+    expect(tiles).toHaveLength(50);
   });
 
   it('should have correct board dimensions for 4x4', () => {
     const board: BoardType = Array(4).fill(null).map(() => Array(4).fill(null));
 
     const { container } = render(<Board board={board} boardSize={4} />);
-    const boardElement = container.querySelector('.grid') as HTMLElement;
+    // Get desktop version (hidden on mobile, visible on sm+)
+    const boardElement = container.querySelector('.hidden.sm\\:grid') as HTMLElement;
 
-    // 4 * 95px cells + 3 * 16px gaps + 2 * 16px padding = 460px
+    // Desktop: 4 * 95px cells + 3 * 16px gaps + 2 * 16px padding = 460px
     expect(boardElement.style.width).toBe('460px');
     expect(boardElement.style.height).toBe('460px');
   });
@@ -88,9 +91,10 @@ describe('Board', () => {
     const board: BoardType = Array(5).fill(null).map(() => Array(5).fill(null));
 
     const { container } = render(<Board board={board} boardSize={5} />);
-    const boardElement = container.querySelector('.grid') as HTMLElement;
+    // Get desktop version (hidden on mobile, visible on sm+)
+    const boardElement = container.querySelector('.hidden.sm\\:grid') as HTMLElement;
 
-    // 5 * 76px cells + 4 * 16px gaps + 2 * 16px padding = 476px
+    // Desktop: 5 * 76px cells + 4 * 16px gaps + 2 * 16px padding = 476px
     expect(boardElement.style.width).toBe('476px');
     expect(boardElement.style.height).toBe('476px');
   });
@@ -99,9 +103,10 @@ describe('Board', () => {
     const board: BoardType = Array(6).fill(null).map(() => Array(6).fill(null));
 
     const { container } = render(<Board board={board} boardSize={6} />);
-    const boardElement = container.querySelector('.grid') as HTMLElement;
+    // Get desktop version (hidden on mobile, visible on sm+)
+    const boardElement = container.querySelector('.hidden.sm\\:grid') as HTMLElement;
 
-    // 6 * 63px cells + 5 * 16px gaps + 2 * 16px padding = 490px
+    // Desktop: 6 * 63px cells + 5 * 16px gaps + 2 * 16px padding = 490px
     expect(boardElement.style.width).toBe('490px');
     expect(boardElement.style.height).toBe('490px');
   });
@@ -117,7 +122,8 @@ describe('Board', () => {
     const { container } = render(<Board board={board} boardSize={4} />);
     const tiles = container.querySelectorAll('.aspect-square');
 
-    expect(tiles).toHaveLength(16);
+    // Board renders both desktop and mobile versions, so 16 * 2 = 32 tiles
+    expect(tiles).toHaveLength(32);
   });
 
   it('should update when board changes', () => {
@@ -138,10 +144,11 @@ describe('Board', () => {
     const board: BoardType = Array(4).fill(null).map(() => Array(4).fill(null));
 
     const { container } = render(<Board board={board} boardSize={4} />);
-    const gridElement = container.querySelector('.grid');
+    // Get desktop version
+    const desktopGrid = container.querySelector('.hidden.sm\\:grid');
 
-    expect(gridElement).toHaveClass('gap-4');
-    expect(gridElement).toHaveClass('p-4');
-    expect(gridElement).toHaveClass('rounded-lg');
+    expect(desktopGrid).toHaveClass('gap-4');
+    expect(desktopGrid).toHaveClass('p-4');
+    expect(desktopGrid).toHaveClass('rounded-lg');
   });
 });
