@@ -81,7 +81,7 @@ export const Game = () => {
   }, [status]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors px-4 py-6 sm:px-6 overflow-hidden">
+    <div className="flex flex-col items-center justify-center min-h-full bg-gray-100 dark:bg-gray-900 transition-colors px-4 py-6 sm:px-6 overflow-hidden">
       {/* Toast notifications */}
       {toast && (
         <Toast
