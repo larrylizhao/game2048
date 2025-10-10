@@ -1,114 +1,79 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { Board, Direction } from '../core';
-import { getLocalAIHint } from './localAI';
+import { AIProvider } from './providers/types';
+import { ClaudeProvider } from './providers/ClaudeProvider';
+import { GrokProvider } from './providers/GrokProvider';
+import { LocalProvider } from './providers/LocalProvider';
 
 /**
- * Initialize Anthropic client
- * Note: dangerouslyAllowBrowser is only for local development
- */
-const client = new Anthropic({
-  apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY,
-  dangerouslyAllowBrowser: true,
-});
-
-/**
- * Validates if the AI response is a valid direction
- */
-function isValidDirection(text: string): text is Direction {
-  const validDirections: string[] = Object.values(Direction);
-  return validDirections.includes(text);
-}
-
-/**
- * Builds the prompt for Claude AI to analyze the game board
- */
-function buildPrompt(board: Board): string {
-  const boardJson = JSON.stringify(board, null, 2);
-  return `You are a 2048 game AI expert. Analyze the current board state and suggest the BEST move.
-
-Current board (null = empty cell):
-${boardJson}
-
-Game Rules:
-- When two tiles with the same number touch, they merge into one with double the value
-- After each move, a new tile (2 or 4) appears in a random empty spot
-- Goal: reach the 2048 tile or maximize score
-- Avoid filling the board completely (game over)
-
-Winning Strategy:
-- Keep the highest tile in a corner (preferably top-left or bottom-left)
-- Build tiles in descending order along one edge
-- Maintain sorted rows/columns when possible
-- Minimize moves that break the tile arrangement
-
-Respond with ONLY ONE WORD from these options: left, right, up, or down`;
-}
-
-/**
- * Gets AI hint from Claude API
- * Internal function used by getAIHint
+ * AI Provider Chain
  *
- * @param board - The current game board
- * @param boardSize - Size of the board
- * @returns The suggested direction to move
- * @throws Error if API call fails or returns invalid direction
+ * Implements Chain of Responsibility pattern to try multiple AI providers
+ * in sequence until one succeeds.
  */
-async function getClaudeHint(board: Board, boardSize: number): Promise<Direction> {
-  const message = await client.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
-    max_tokens: 100,
-    messages: [{
-      role: 'user',
-      content: buildPrompt(board),
-    }],
-  });
+class AIProviderChain {
+  constructor(private providers: AIProvider[]) {}
 
-  // Extract text from response
-  const textContent = message.content[0];
-  if (textContent.type !== 'text') {
-    throw new Error('Unexpected response format from AI');
+  /**
+   * Gets AI hint by trying each provider in sequence
+   *
+   * @returns The suggested direction from the first successful provider
+   * @throws Error if all providers fail
+   */
+  async getHint(board: Board, boardSize: number): Promise<Direction> {
+    for (const provider of this.providers) {
+      // Skip unavailable providers (e.g., missing API key)
+      if (!provider.isAvailable()) {
+        console.info(`${provider.name} AI: not available (missing API key)`);
+        continue;
+      }
+
+      try {
+        console.info(`${provider.name} AI: trying...`);
+        const hint = await provider.getHint(board, boardSize);
+        console.info(`${provider.name} AI: success ✓`);
+        return hint;
+      } catch (error) {
+        console.error(`${provider.name} AI: failed`, error);
+        // Continue to next provider
+      }
+    }
+
+    throw new Error('All AI providers failed');
   }
-
-  const suggestion = textContent.text.trim().toLowerCase();
-
-  // Validate the response
-  if (!isValidDirection(suggestion)) {
-    console.warn(`Invalid AI suggestion: ${suggestion}, falling back to local AI`);
-    return getLocalAIHint(board, boardSize);
-  }
-
-  return suggestion;
 }
 
 /**
  * Gets AI hint for the best move based on current board state
  *
- * Strategy:
- * 1. First, try Claude API (high quality, slower)
- * 2. If API fails and useFallback=true, use local Expectimax algorithm (good quality, fast)
- * 3. If useFallback=false, throw the error
+ * Strategy (in priority order):
+ * 1. Claude API (highest quality, requires API key)
+ * 2. Grok API (high quality, requires API key)
+ * 3. Local Expectimax algorithm (good quality, always available)
+ *
+ * The first available provider will be used. If it fails, the next one is tried.
  *
  * @param board - The current game board
  * @param boardSize - Size of the board (default: 4)
- * @param useFallback - Whether to use local AI when API fails (default: true)
+ * @param useFallback - Whether to use local AI when remote APIs fail (default: true)
  * @returns The suggested direction to move
- * @throws Error if API call fails and useFallback is false
+ * @throws Error if all providers fail (only when useFallback is false and remote APIs fail)
  */
 export async function getAIHint(
   board: Board,
   boardSize: number = 4,
   useFallback: boolean = true
 ): Promise<Direction> {
-  try {
-    return await getClaudeHint(board, boardSize);
-  } catch (error) {
-    console.error('Failed to get Claude AI hint:', error);
+  // Build provider chain based on configuration
+  const providers: AIProvider[] = [
+    new ClaudeProvider(),
+    new GrokProvider(),
+  ];
 
-    if (useFallback) {
-      console.info('Falling back to local Expectimax AI');
-      return getLocalAIHint(board, boardSize);
-    }
-
-    throw error;
+  // Add local fallback if enabled
+  if (useFallback) {
+    providers.push(new LocalProvider());
   }
+
+  const chain = new AIProviderChain(providers);
+  return chain.getHint(board, boardSize);
 }
