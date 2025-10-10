@@ -2,24 +2,36 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Direction } from '../../core';
 import type { Board } from '../../core';
 
-// Create a mock create function that we can control
-const mockCreate = vi.fn();
-const mockGetLocalAIHint = vi.fn();
+// Mock providers
+const mockClaudeProvider = {
+  name: 'Claude',
+  isAvailable: vi.fn(),
+  getHint: vi.fn(),
+};
 
-// Mock the Anthropic SDK module
-vi.mock('@anthropic-ai/sdk', () => {
-  return {
-    default: class MockAnthropic {
-      messages = {
-        create: mockCreate,
-      };
-    },
-  };
-});
+const mockGrokProvider = {
+  name: 'Grok',
+  isAvailable: vi.fn(),
+  getHint: vi.fn(),
+};
 
-// Mock the local AI module
-vi.mock('../localAI', () => ({
-  getLocalAIHint: mockGetLocalAIHint,
+const mockLocalProvider = {
+  name: 'Local',
+  isAvailable: vi.fn(),
+  getHint: vi.fn(),
+};
+
+// Mock provider modules
+vi.mock('../providers/ClaudeProvider', () => ({
+  ClaudeProvider: vi.fn(() => mockClaudeProvider),
+}));
+
+vi.mock('../providers/GrokProvider', () => ({
+  GrokProvider: vi.fn(() => mockGrokProvider),
+}));
+
+vi.mock('../providers/LocalProvider', () => ({
+  LocalProvider: vi.fn(() => mockLocalProvider),
 }));
 
 describe('aiService', () => {
@@ -32,177 +44,203 @@ describe('aiService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default: local AI returns left
-    mockGetLocalAIHint.mockReturnValue(Direction.Left);
+
+    // Default: all providers available and return left
+    mockClaudeProvider.isAvailable.mockReturnValue(true);
+    mockGrokProvider.isAvailable.mockReturnValue(true);
+    mockLocalProvider.isAvailable.mockReturnValue(true);
+
+    mockClaudeProvider.getHint.mockResolvedValue(Direction.Left);
+    mockGrokProvider.getHint.mockResolvedValue(Direction.Right);
+    mockLocalProvider.getHint.mockResolvedValue(Direction.Up);
   });
 
-  describe('getAIHint', () => {
-    it('should return valid direction from AI response', async () => {
-      mockCreate.mockResolvedValue({
-        content: [{ type: 'text', text: 'left' }],
-      });
-
-      // Import after mock is set up
+  describe('Provider Chain', () => {
+    it('should use Claude provider when available', async () => {
       const { getAIHint } = await import('../aiService');
       const result = await getAIHint(mockBoard);
+
       expect(result).toBe(Direction.Left);
+      expect(mockClaudeProvider.getHint).toHaveBeenCalledWith(mockBoard, 4);
+      expect(mockGrokProvider.getHint).not.toHaveBeenCalled();
+      expect(mockLocalProvider.getHint).not.toHaveBeenCalled();
     });
 
-    it('should handle uppercase AI responses', async () => {
-      mockCreate.mockResolvedValue({
-        content: [{ type: 'text', text: 'RIGHT' }],
-      });
+    it('should fallback to Grok when Claude is unavailable', async () => {
+      mockClaudeProvider.isAvailable.mockReturnValue(false);
 
       const { getAIHint } = await import('../aiService');
       const result = await getAIHint(mockBoard);
-      expect(result).toBe(Direction.Right);
-    });
-
-    it('should handle mixed case AI responses', async () => {
-      mockCreate.mockResolvedValue({
-        content: [{ type: 'text', text: 'Up' }],
-      });
-
-      const { getAIHint } = await import('../aiService');
-      const result = await getAIHint(mockBoard);
-      expect(result).toBe(Direction.Up);
-    });
-
-    it('should handle AI responses with whitespace', async () => {
-      mockCreate.mockResolvedValue({
-        content: [{ type: 'text', text: '  down  ' }],
-      });
-
-      const { getAIHint } = await import('../aiService');
-      const result = await getAIHint(mockBoard);
-      expect(result).toBe(Direction.Down);
-    });
-
-    it('should fallback to local AI for invalid Claude responses', async () => {
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      mockCreate.mockResolvedValue({
-        content: [{ type: 'text', text: 'invalid-direction' }],
-      });
-      mockGetLocalAIHint.mockReturnValue(Direction.Right);
-
-      const { getAIHint } = await import('../aiService');
-      const result = await getAIHint(mockBoard, 4);
 
       expect(result).toBe(Direction.Right);
-      expect(consoleWarnSpy).toHaveBeenCalled();
-      expect(mockGetLocalAIHint).toHaveBeenCalledWith(mockBoard, 4);
-
-      consoleWarnSpy.mockRestore();
+      expect(mockClaudeProvider.getHint).not.toHaveBeenCalled();
+      expect(mockGrokProvider.getHint).toHaveBeenCalledWith(mockBoard, 4);
+      expect(mockLocalProvider.getHint).not.toHaveBeenCalled();
     });
 
-    it('should fallback to local AI when API call fails', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    it('should fallback to Grok when Claude fails', async () => {
       const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
-      mockCreate.mockRejectedValue(new Error('API Error'));
-      mockGetLocalAIHint.mockReturnValue(Direction.Up);
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockClaudeProvider.getHint.mockRejectedValue(new Error('Claude API Error'));
 
       const { getAIHint } = await import('../aiService');
-      const result = await getAIHint(mockBoard, 4);
+      const result = await getAIHint(mockBoard);
+
+      expect(result).toBe(Direction.Right);
+      expect(mockClaudeProvider.getHint).toHaveBeenCalled();
+      expect(mockGrokProvider.getHint).toHaveBeenCalledWith(mockBoard, 4);
+      expect(mockLocalProvider.getHint).not.toHaveBeenCalled();
+
+      consoleInfoSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should fallback to Local when both Claude and Grok fail', async () => {
+      const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockClaudeProvider.getHint.mockRejectedValue(new Error('Claude Error'));
+      mockGrokProvider.getHint.mockRejectedValue(new Error('Grok Error'));
+
+      const { getAIHint } = await import('../aiService');
+      const result = await getAIHint(mockBoard);
 
       expect(result).toBe(Direction.Up);
-      expect(mockGetLocalAIHint).toHaveBeenCalledWith(mockBoard, 4);
-      expect(consoleInfoSpy).toHaveBeenCalledWith('Falling back to local Expectimax AI');
+      expect(mockClaudeProvider.getHint).toHaveBeenCalled();
+      expect(mockGrokProvider.getHint).toHaveBeenCalled();
+      expect(mockLocalProvider.getHint).toHaveBeenCalledWith(mockBoard, 4);
 
-      consoleErrorSpy.mockRestore();
       consoleInfoSpy.mockRestore();
-    });
-
-    it('should throw error when API fails and useFallback is false', async () => {
-      mockCreate.mockRejectedValue(new Error('API Error'));
-
-      const { getAIHint } = await import('../aiService');
-      await expect(getAIHint(mockBoard, 4, false)).rejects.toThrow('API Error');
-      expect(mockGetLocalAIHint).not.toHaveBeenCalled();
-    });
-
-    it('should fallback to local AI for non-text response type', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
-      mockCreate.mockResolvedValue({
-        content: [{ type: 'image', data: 'base64data' }],
-      });
-      mockGetLocalAIHint.mockReturnValue(Direction.Down);
-
-      const { getAIHint } = await import('../aiService');
-      const result = await getAIHint(mockBoard, 4);
-
-      expect(result).toBe(Direction.Down);
-      expect(mockGetLocalAIHint).toHaveBeenCalledWith(mockBoard, 4);
-
       consoleErrorSpy.mockRestore();
-      consoleInfoSpy.mockRestore();
     });
 
-    it('should call API with correct parameters', async () => {
-      mockCreate.mockResolvedValue({
-        content: [{ type: 'text', text: 'left' }],
-      });
+    it('should fallback to Local when both Claude and Grok are unavailable', async () => {
+      mockClaudeProvider.isAvailable.mockReturnValue(false);
+      mockGrokProvider.isAvailable.mockReturnValue(false);
 
       const { getAIHint } = await import('../aiService');
-      await getAIHint(mockBoard);
+      const result = await getAIHint(mockBoard);
 
-      expect(mockCreate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 100,
-          messages: expect.arrayContaining([
-            expect.objectContaining({
-              role: 'user',
-              content: expect.stringContaining('2048 game AI expert'),
-            }),
-          ]),
-        })
+      expect(result).toBe(Direction.Up);
+      expect(mockClaudeProvider.getHint).not.toHaveBeenCalled();
+      expect(mockGrokProvider.getHint).not.toHaveBeenCalled();
+      expect(mockLocalProvider.getHint).toHaveBeenCalledWith(mockBoard, 4);
+    });
+  });
+
+  describe('useFallback parameter', () => {
+    it('should not include Local provider when useFallback is false', async () => {
+      mockClaudeProvider.isAvailable.mockReturnValue(false);
+      mockGrokProvider.isAvailable.mockReturnValue(false);
+
+      const { getAIHint } = await import('../aiService');
+
+      await expect(getAIHint(mockBoard, 4, false)).rejects.toThrow(
+        'All AI providers failed'
       );
+      expect(mockLocalProvider.getHint).not.toHaveBeenCalled();
     });
 
-    it('should include board state in prompt', async () => {
-      mockCreate.mockResolvedValue({
-        content: [{ type: 'text', text: 'left' }],
-      });
+    it('should throw when all remote providers fail and useFallback is false', async () => {
+      const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockClaudeProvider.getHint.mockRejectedValue(new Error('Claude Error'));
+      mockGrokProvider.getHint.mockRejectedValue(new Error('Grok Error'));
 
       const { getAIHint } = await import('../aiService');
-      await getAIHint(mockBoard);
 
-      const callArgs = mockCreate.mock.calls[0][0];
-      expect(callArgs.messages[0].content).toContain(JSON.stringify(mockBoard, null, 2));
+      await expect(getAIHint(mockBoard, 4, false)).rejects.toThrow(
+        'All AI providers failed'
+      );
+      expect(mockLocalProvider.getHint).not.toHaveBeenCalled();
+
+      consoleInfoSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
     });
+  });
 
+  describe('boardSize parameter', () => {
     it('should use default boardSize of 4 when not provided', async () => {
-      mockCreate.mockRejectedValue(new Error('API Error'));
-      mockGetLocalAIHint.mockReturnValue(Direction.Left);
-
       const { getAIHint } = await import('../aiService');
       await getAIHint(mockBoard);
 
-      // Should call local AI with default boardSize of 4
-      expect(mockGetLocalAIHint).toHaveBeenCalledWith(mockBoard, 4);
+      expect(mockClaudeProvider.getHint).toHaveBeenCalledWith(mockBoard, 4);
     });
 
-    it('should pass custom boardSize to local AI', async () => {
-      mockCreate.mockRejectedValue(new Error('API Error'));
-      mockGetLocalAIHint.mockReturnValue(Direction.Right);
-
+    it('should pass custom boardSize to providers', async () => {
       const { getAIHint } = await import('../aiService');
       await getAIHint(mockBoard, 5);
 
-      expect(mockGetLocalAIHint).toHaveBeenCalledWith(mockBoard, 5);
+      expect(mockClaudeProvider.getHint).toHaveBeenCalledWith(mockBoard, 5);
     });
 
-    it('should prefer Claude AI over local AI when available', async () => {
-      mockCreate.mockResolvedValue({
-        content: [{ type: 'text', text: 'up' }],
-      });
+    it('should propagate boardSize through fallback chain', async () => {
+      const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockClaudeProvider.getHint.mockRejectedValue(new Error('Error'));
+      mockGrokProvider.getHint.mockRejectedValue(new Error('Error'));
 
       const { getAIHint } = await import('../aiService');
-      const result = await getAIHint(mockBoard, 4);
+      await getAIHint(mockBoard, 6);
 
-      expect(result).toBe(Direction.Up);
-      expect(mockGetLocalAIHint).not.toHaveBeenCalled();
+      expect(mockLocalProvider.getHint).toHaveBeenCalledWith(mockBoard, 6);
+
+      consoleInfoSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    });
+  });
+
+  describe('Console logging', () => {
+    it('should log when provider is not available', async () => {
+      const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+      mockClaudeProvider.isAvailable.mockReturnValue(false);
+
+      const { getAIHint } = await import('../aiService');
+      await getAIHint(mockBoard);
+
+      expect(consoleInfoSpy).toHaveBeenCalledWith(
+        'Claude AI: not available (missing API key)'
+      );
+
+      consoleInfoSpy.mockRestore();
+    });
+
+    it('should log when provider is trying', async () => {
+      const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+      const { getAIHint } = await import('../aiService');
+      await getAIHint(mockBoard);
+
+      expect(consoleInfoSpy).toHaveBeenCalledWith('Claude AI: trying...');
+
+      consoleInfoSpy.mockRestore();
+    });
+
+    it('should log when provider succeeds', async () => {
+      const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+      const { getAIHint } = await import('../aiService');
+      await getAIHint(mockBoard);
+
+      expect(consoleInfoSpy).toHaveBeenCalledWith('Claude AI: success ✓');
+
+      consoleInfoSpy.mockRestore();
+    });
+
+    it('should log when provider fails', async () => {
+      const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockClaudeProvider.getHint.mockRejectedValue(new Error('API Error'));
+
+      const { getAIHint } = await import('../aiService');
+      await getAIHint(mockBoard);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Claude AI: failed',
+        expect.any(Error)
+      );
+
+      consoleInfoSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
     });
   });
 });
