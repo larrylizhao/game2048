@@ -5,8 +5,9 @@ import { AIProvider, buildPrompt, isValidDirection } from './types';
 /**
  * Grok AI provider using xAI API
  *
- * Uses Grok 4 (released Jul 2025) - the most intelligent model in the world,
- * with 256K context window and advanced reasoning capabilities.
+ * Uses Grok 4 Fast Non-Reasoning - optimized for quick responses and cost efficiency.
+ * Perfect for game AI hints: 2M context window, 98% cheaper than Grok 4,
+ * with lightning-fast responses ideal for real-time decision making.
  */
 export class GrokProvider implements AIProvider {
   readonly name = 'Grok';
@@ -33,7 +34,7 @@ export class GrokProvider implements AIProvider {
     }
 
     const response = await this.client.chat.completions.create({
-      model: 'grok-4',
+      model: 'grok-4-fast-non-reasoning',
       messages: [
         {
           role: 'user',
