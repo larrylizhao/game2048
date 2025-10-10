@@ -5,7 +5,8 @@ import { AIProvider, buildPrompt, isValidDirection } from './types';
 /**
  * Grok AI provider using xAI API
  *
- * Uses Grok model via OpenAI-compatible API.
+ * Uses Grok 4 (released Jul 2025) - the most intelligent model in the world,
+ * with 256K context window and advanced reasoning capabilities.
  */
 export class GrokProvider implements AIProvider {
   readonly name = 'Grok';
@@ -32,7 +33,7 @@ export class GrokProvider implements AIProvider {
     }
 
     const response = await this.client.chat.completions.create({
-      model: 'grok-beta',
+      model: 'grok-4',
       messages: [
         {
           role: 'user',

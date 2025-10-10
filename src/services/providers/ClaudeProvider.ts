@@ -5,7 +5,8 @@ import { AIProvider, buildPrompt, isValidDirection } from './types';
 /**
  * Claude AI provider using Anthropic API
  *
- * Uses Claude 3.5 Sonnet model for high-quality move suggestions.
+ * Uses Claude Sonnet 4.5 (released Sep 2025) - the world's best coding model,
+ * perfect for complex reasoning and game strategy analysis.
  */
 export class ClaudeProvider implements AIProvider {
   readonly name = 'Claude';
@@ -31,7 +32,7 @@ export class ClaudeProvider implements AIProvider {
     }
 
     const message = await this.client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-5',
       max_tokens: 100,
       messages: [
         {
