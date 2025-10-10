@@ -11,7 +11,7 @@ A modern implementation of the classic 2048 puzzle game built with React, TypeSc
 - 🎯 Classic 2048 gameplay with smooth animations
 - 📐 Multiple board sizes: 4×4, 5×5, and 6×6
 - 🏆 Victory modal with continue playing option
-- 🤖 AI-powered move suggestions using Claude API
+- 🤖 AI-powered move suggestions with smart fallback (Claude → Grok → Local)
 - 🌓 Dark mode with system preference detection
 - 💾 LocalStorage persistence for theme preference and best score
 - ⌨️ Keyboard controls (arrow keys)
@@ -81,8 +81,14 @@ src/
 │   ├── useKeyboard.ts        # Keyboard event handling
 │   └── useSwipe.ts           # Touch/swipe gesture handling
 │
-├── services/                  # External services
-│   └── aiService.ts          # Claude AI integration
+├── services/                  # AI services
+│   ├── aiService.ts          # Main AI service with provider chain
+│   ├── localAI.ts            # Local Expectimax AI algorithm
+│   └── providers/            # AI provider implementations
+│       ├── types.ts          # Provider interface and shared utilities
+│       ├── ClaudeProvider.ts # Anthropic Claude integration
+│       ├── GrokProvider.ts   # xAI Grok integration
+│       └── LocalProvider.ts  # Local AI adapter
 │
 ├── config/                    # Configuration
 │   └── boardConfig.ts        # Board size configurations
@@ -155,13 +161,19 @@ src/
 
 ### 3. Services Layer (`src/services/`)
 
-**Purpose**: External API integrations
+**Purpose**: AI service integrations with provider abstraction
 
 **Responsibilities**:
-- Claude AI API communication
+- Multiple AI provider support (Claude, Grok, Local)
+- Smart fallback chain (tries providers in priority order)
 - Prompt engineering for optimal suggestions
-- Error handling and fallbacks
+- Error handling and automatic fallback
 - Response validation
+
+**Architecture**:
+- Strategy Pattern: Each AI provider implements a common interface
+- Chain of Responsibility: Tries providers sequentially until one succeeds
+- Open-Closed Principle: Easy to add new providers without modifying existing code
 
 ### 4. Theme System (`src/theme/`)
 
@@ -227,7 +239,8 @@ sequenceDiagram
 
 - Node.js 18+
 - npm or yarn
-- Anthropic API key (for AI features)
+- (Optional) Anthropic Claude API key or Grok API key for AI features
+  - Without API keys, the app will use local AI algorithm
 
 ### Installation
 
@@ -242,9 +255,16 @@ cd game2048
 npm install
 ```
 
-3. Create a `.env` file:
+3. Create a `.env` file (optional, for AI features):
 ```env
-VITE_ANTHROPIC_API_KEY=your_api_key_here
+# Option 1: Use Claude AI (highest quality)
+VITE_ANTHROPIC_API_KEY=your_claude_api_key_here
+
+# Option 2: Use Grok AI (high quality)
+VITE_GROK_API_KEY=your_grok_api_key_here
+
+# Note: If both keys are provided, Claude will be used first.
+# If neither is provided, local AI algorithm will be used.
 ```
 
 4. Start the development server:
@@ -292,7 +312,13 @@ When you win, a modal appears with two choices:
 
 ### AI Assistant
 
-Click the **✨ AI Hint** button to get move suggestions from Claude AI. The AI analyzes the current board and suggests the optimal move to:
+Click the **✨ AI Hint** button to get intelligent move suggestions. The app uses a smart fallback system:
+
+1. **Claude AI** (if API key provided) - Highest quality, powered by Anthropic
+2. **Grok AI** (if API key provided) - High quality, powered by xAI
+3. **Local Expectimax AI** (always available) - Good quality, runs locally
+
+The AI analyzes the current board and suggests the optimal move to:
 - Avoid game over
 - Maximize score
 - Increase chances of winning
