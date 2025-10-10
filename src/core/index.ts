@@ -10,14 +10,14 @@ export * from './constants';
 
 // Board operations
 export { initBoard } from './board/boardFactory';
-export { 
-  getEmptyCells, 
-  hasEmptyCells, 
-  isGameOver, 
-  hasWinningTile, 
-  areBoardsEqual 
+export {
+  getEmptyCells,
+  hasEmptyCells,
+  isGameOver,
+  hasWinningTile,
+  areBoardsEqual
 } from './board/boardQuery';
-export { rotateClockwise, rotate } from './board/boardTransform';
+export { identity, transpose, reverseRows, compose } from './board/boardTransform';
 
 // Tile operations
 export { addRandomTile } from './tile/tileGenerator';
