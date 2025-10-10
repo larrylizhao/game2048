@@ -31,7 +31,7 @@ export const Game = () => {
   const [showVictoryModal, setShowVictoryModal] = useState(false);
   const isFirstRender = useRef(true);
 
-  const { board, score, bestScore, status, boardSize, winningTile, hasWon, move, restart, continuePlaying } = useGameState({
+  const { board, score, bestScore, status, boardSize, winningTile, hasWon, move, restart, continuePlaying, pause, resume } = useGameState({
     boardSize: boardConfig.size,
     winningTile: boardConfig.winningTile,
   });
@@ -54,8 +54,10 @@ export const Game = () => {
       [Direction.Up]: '↑',
       [Direction.Down]: '↓',
     };
-    showToast(`AI suggests: ${direction.toUpperCase()} ${arrows[direction]}`, 'info');
-    move(direction);
+    showToast(
+      `AI suggests: ${direction.toUpperCase()} ${arrows[direction]}`,
+      'info'
+    );
   };
 
   const handleAIError = (message: string) => {
@@ -117,6 +119,9 @@ export const Game = () => {
       <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2">
         <AIHintButton
           board={board}
+          boardSize={boardSize}
+          pause={pause}
+          resume={resume}
           onHintReceived={handleAIHint}
           onError={handleAIError}
         />

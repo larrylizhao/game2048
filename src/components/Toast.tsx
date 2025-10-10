@@ -15,7 +15,7 @@ interface ToastProps {
 /**
  * Toast notification component with auto-dismiss and optional action button
  */
-export const Toast = ({ message, type = 'info', duration = 3000, onClose, actionLabel, onAction }: ToastProps) => {
+export const Toast = ({ message, type = 'info', duration = 1500, onClose, actionLabel, onAction }: ToastProps) => {
   useEffect(() => {
     // Don't auto-dismiss if there's an action button
     if (actionLabel && onAction) {

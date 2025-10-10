@@ -26,6 +26,8 @@ export interface GameActions {
   move: (direction: Direction) => void;
   restart: () => void;
   continuePlaying: () => void;
+  pause: () => void;
+  resume: () => void;
 }
 
 export interface UseGameStateOptions {
@@ -112,6 +114,34 @@ export function useGameState({ boardSize, winningTile }: UseGameStateOptions): G
     setStatus(GameStatus.Playing);
   }, []);
 
+  /**
+   * Pauses the game (e.g., during AI computation)
+   * Only pauses if game is currently in Playing state
+   * Uses functional update to avoid stale closure issues
+   */
+  const pause = useCallback(() => {
+    setStatus(prevStatus => {
+      if (prevStatus === GameStatus.Playing) {
+        return GameStatus.Paused;
+      }
+      return prevStatus;
+    });
+  }, []);
+
+  /**
+   * Resumes the game from paused state
+   * Only resumes if game is currently in Paused state
+   * Uses functional update to avoid stale closure issues
+   */
+  const resume = useCallback(() => {
+    setStatus(prevStatus => {
+      if (prevStatus === GameStatus.Paused) {
+        return GameStatus.Playing;
+      }
+      return prevStatus;
+    });
+  }, []);
+
   return {
     board,
     score,
@@ -123,5 +153,7 @@ export function useGameState({ boardSize, winningTile }: UseGameStateOptions): G
     move,
     restart,
     continuePlaying,
+    pause,
+    resume,
   };
 }

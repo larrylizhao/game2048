@@ -10,6 +10,7 @@ export enum Direction {
 
 export enum GameStatus {
   Playing = 'playing',
+  Paused = 'paused',
   Won = 'won',
   Lost = 'lost',
 }

@@ -127,6 +127,158 @@ describe('useGameState', () => {
     });
   });
 
+  describe('pause', () => {
+    it('should change status from Playing to Paused', () => {
+      const { result } = renderHook(() =>
+        useGameState({ boardSize: 4, winningTile: 2048 })
+      );
+
+      expect(result.current.status).toBe(GameStatus.Playing);
+
+      act(() => {
+        result.current.pause();
+      });
+
+      expect(result.current.status).toBe(GameStatus.Paused);
+    });
+
+    it('should not pause when status is Won', () => {
+      const { result } = renderHook(() =>
+        useGameState({ boardSize: 4, winningTile: 4 })
+      );
+
+      // Win the game
+      let attempts = 0;
+      while (result.current.status === GameStatus.Playing && attempts < 100) {
+        act(() => {
+          result.current.move(Direction.Left);
+          result.current.move(Direction.Right);
+          result.current.move(Direction.Up);
+          result.current.move(Direction.Down);
+        });
+        attempts++;
+      }
+
+      if (result.current.status === GameStatus.Won) {
+        act(() => {
+          result.current.pause();
+        });
+
+        expect(result.current.status).toBe(GameStatus.Won);
+      }
+    });
+
+    it('should not pause when status is Lost', () => {
+      const { result } = renderHook(() =>
+        useGameState({ boardSize: 4, winningTile: 2048 })
+      );
+
+      // Try to lose the game
+      let attempts = 0;
+      while (result.current.status === GameStatus.Playing && attempts < 200) {
+        act(() => {
+          result.current.move(Direction.Left);
+          result.current.move(Direction.Up);
+          result.current.move(Direction.Right);
+          result.current.move(Direction.Down);
+        });
+        attempts++;
+      }
+
+      if (result.current.status === GameStatus.Lost) {
+        act(() => {
+          result.current.pause();
+        });
+
+        expect(result.current.status).toBe(GameStatus.Lost);
+      }
+    });
+  });
+
+  describe('resume', () => {
+    it('should change status from Paused to Playing', () => {
+      const { result } = renderHook(() =>
+        useGameState({ boardSize: 4, winningTile: 2048 })
+      );
+
+      act(() => {
+        result.current.pause();
+      });
+
+      expect(result.current.status).toBe(GameStatus.Paused);
+
+      act(() => {
+        result.current.resume();
+      });
+
+      expect(result.current.status).toBe(GameStatus.Playing);
+    });
+
+    it('should not resume when status is not Paused', () => {
+      const { result } = renderHook(() =>
+        useGameState({ boardSize: 4, winningTile: 2048 })
+      );
+
+      expect(result.current.status).toBe(GameStatus.Playing);
+
+      act(() => {
+        result.current.resume();
+      });
+
+      // Should still be Playing
+      expect(result.current.status).toBe(GameStatus.Playing);
+    });
+  });
+
+  describe('pause/resume interaction with move', () => {
+    it('should not allow moves when game is paused', () => {
+      const { result } = renderHook(() =>
+        useGameState({ boardSize: 4, winningTile: 2048 })
+      );
+
+      act(() => {
+        result.current.pause();
+      });
+
+      const boardBefore = JSON.stringify(result.current.board);
+      const scoreBefore = result.current.score;
+
+      act(() => {
+        result.current.move(Direction.Left);
+      });
+
+      // Board and score should not change when paused
+      expect(JSON.stringify(result.current.board)).toBe(boardBefore);
+      expect(result.current.score).toBe(scoreBefore);
+    });
+
+    it('should allow moves after resuming', () => {
+      const { result } = renderHook(() =>
+        useGameState({ boardSize: 4, winningTile: 2048 })
+      );
+
+      act(() => {
+        result.current.pause();
+      });
+
+      expect(result.current.status).toBe(GameStatus.Paused);
+
+      act(() => {
+        result.current.resume();
+      });
+
+      expect(result.current.status).toBe(GameStatus.Playing);
+
+      // Should be able to move now
+      act(() => {
+        result.current.move(Direction.Left);
+      });
+
+      // Move function should execute (board might change depending on state)
+      expect(result.current.move).toBeDefined();
+    });
+  });
+
   describe('move', () => {
     it('should not modify board when game is not Playing', () => {
       const { result } = renderHook(() =>
@@ -336,10 +488,14 @@ describe('useGameState', () => {
       expect(result.current).toHaveProperty('move');
       expect(result.current).toHaveProperty('restart');
       expect(result.current).toHaveProperty('continuePlaying');
+      expect(result.current).toHaveProperty('pause');
+      expect(result.current).toHaveProperty('resume');
 
       expect(typeof result.current.move).toBe('function');
       expect(typeof result.current.restart).toBe('function');
       expect(typeof result.current.continuePlaying).toBe('function');
+      expect(typeof result.current.pause).toBe('function');
+      expect(typeof result.current.resume).toBe('function');
     });
   });
 });

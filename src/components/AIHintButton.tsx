@@ -5,6 +5,9 @@ import { Sparkles } from './icons';
 
 interface AIHintButtonProps {
   board: Board;
+  boardSize: number;
+  pause: () => void;
+  resume: () => void;
   onHintReceived: (direction: Direction) => void;
   onError: (message: string) => void;
 }
@@ -12,20 +15,22 @@ interface AIHintButtonProps {
 /**
  * Compact AI hint button for toolbar
  */
-export const AIHintButton = ({ board, onHintReceived, onError }: AIHintButtonProps) => {
+export const AIHintButton = ({ board, boardSize, pause, resume, onHintReceived, onError }: AIHintButtonProps) => {
   const [loading, setLoading] = useState(false);
 
   const handleGetHint = async () => {
     setLoading(true);
+    pause();  // Pause game during AI computation
 
     try {
-      const direction = await getAIHint(board);
+      const direction = await getAIHint(board, boardSize);
       onHintReceived(direction);
     } catch (err) {
       onError('Failed to get AI hint. Please check your API key.');
       console.error('AI hint failed:', err);
     } finally {
       setLoading(false);
+      resume();  // Resume game after computation
     }
   };
 
