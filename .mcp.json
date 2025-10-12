@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "tailwindcss": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "tailwindcss-mcp-server"],
+      "description": "Tailwind CSS utilities, documentation, and code generation"
+    },
+    "memory": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "description": "Persistent memory system for maintaining project context"
+    },
+    "chrome-devtools": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest"],
+      "description": "Chrome DevTools for real-time debugging, console logs, network inspection, and performance analysis"
+    },
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/lizhao/Desktop/playground/game2048"
+      ],
+      "description": "Secure filesystem operations with directory access control"
+    }
+  }
+}
